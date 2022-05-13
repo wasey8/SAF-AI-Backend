@@ -1,6 +1,14 @@
 from flask import Flask,jsonify,request
+from flask import session as my_session
 from database import users,session
+from datetime import timedelta
+
+
 app=Flask(__name__)
+app.secret_key="wasey1238883jchsd"
+app.config["SESSION_PERMANENT"] =timedelta(minutes=60)
+app.config["SESSION_TYPE"] = "filesystem"
+
 
 
 #Signup API
@@ -53,6 +61,14 @@ def login():
         Username = request.form["username"]
         Password = request.form["password"]
         
+        loginuser= my_session.get('username')
+        if loginuser==Username:
+            return jsonify(
+                message = 'Already logged in!',
+                status=200
+            )
+        
+        my_session['username']=Username        
         login = session.query(users).filter_by(username=Username,password=Password).first()
         
         if not login:
@@ -76,9 +92,24 @@ def login():
         
             
             
+#Logout api
+@app.route("/Logout",methods=['POST'])
+def Logout():
+    if 'username' in my_session:
+        my_session.pop('username', None)
+        return jsonify(
+            status=200,
+            message='Logged out successfully!'
+            
+        )
+    return jsonify(
+            status=200,
+            message="You're not logged in!"
+            
+        )
 
 
-    
+        
     
 
 if __name__=='__main__':
